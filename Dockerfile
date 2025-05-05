@@ -1,4 +1,5 @@
 FROM python:3.9-slim
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     build-essential \
     git \
@@ -22,13 +23,23 @@ RUN apt-get update && apt-get install -y \
     libgdbm-compat-dev \
     python3-pip \
     && rm -rf /var/lib/apt/lists/*
-ENV LANG C.UTF-8
+# Set locale
+ENV LANG=C.UTF-8
+# Install Python dependencies
 RUN pip install --no-cache-dir cython buildozer
-# Patch Buildozer to skip root confirmation
-RUN python3 -c "\
-import buildozer; \
-f = buildozer.__file__; \
-with open(f) as file: content = file.read(); \
-content = content.replace(\"cont = input('Are you sure you want to continue [y/n]?')\", \"cont = 'y'\"); \
-with open(f, 'w') as file: file.write(content)"
+# Patch Buildozer to auto-confirm running as root
+RUN python3 - <<EOF
+import buildozer
+f = buildozer.__file__
+with open(f) as file:
+    content = file.read()
+content = content.replace("cont = input('Are you sure you want to continue [y/n]?')", "cont = 'y'")
+with open(f, 'w') as file:
+    file.write(content)
+EOF
+# Default working directory
 WORKDIR /app
+
+
+
+
