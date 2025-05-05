@@ -1,14 +1,15 @@
+image: sridhar281994/buildozer-android:v10
 stages:
-  - docker-build
-docker_build:
-  stage: docker-build
-  image: docker:latest
-  services:
-    - docker:dind
-  variables:
-    DOCKER_IMAGE: sridhar281994/buildozer-android:v11
-  before_script:
-    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+  - build
+variables:
+  GRADLE_USER_HOME: "$CI_PROJECT_DIR/.gradle"
+before_script:
+  - pip install --upgrade buildozer cython
+build-apk:
+  stage: build
   script:
-    - docker build -t $DOCKER_IMAGE .
-    - docker push $DOCKER_IMAGE
+    - buildozer android debug
+  artifacts:
+    paths:
+      - bin/*.apk
+    expire_in: 1 week
