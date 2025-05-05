@@ -1,14 +1,14 @@
 stages:
-  - build
-variables:
-  DOCKER_IMAGE: sridhar281994/buildozer-android:v10
-build_apk:
-  stage: build
+  - docker-build
+docker_build:
+  stage: docker-build
   image: docker:latest
   services:
     - docker:dind
+  variables:
+    DOCKER_IMAGE: sridhar281994/buildozer-android:v11
   before_script:
     - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
   script:
     - docker build -t $DOCKER_IMAGE .
-    - docker run --rm -v $CI_PROJECT_DIR:/app $DOCKER_IMAGE buildozer --allow-root -v android debug
+    - docker push $DOCKER_IMAGE
