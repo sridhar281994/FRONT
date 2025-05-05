@@ -1,17 +1,26 @@
-image: sridhar281994/buildozer-android:v10
+image: docker:latest
+services:
+  - docker:dind
+variables:
+  DOCKER_DRIVER: overlay2
+  DOCKER_IMAGE: sridhar281994/buildozer-android:v10
 stages:
   - build
-variables:
-  ANDROID_HOME: "/root/.buildozer/android/platform/android-sdk"
 build-apk:
   stage: build
   script:
-    - pip install --upgrade pip buildozer cython
-    # Patch Buildozer to auto-accept root prompt
-    - sed -i "s/cont = input('Are you sure you want to continue y\/n\?')/cont = 'y'/" \
-        $(python3 -c "import buildozer; print(buildozer.__file__)")
-    - buildozer android debug
+    - docker build -t kivy-builder .
+    - docker run --rm -v $CI_PROJECT_DIR:/app $DOCKER_IMAGE /bin/sh -c "
+        pip install --upgrade pip buildozer cython &&
+        pyfile=\$(python3 -c \"import buildozer, os; p = buildozer.__file__.replace('__init__.pyc', '__init__.py'); print(p if os.path.exists(p) else '')\") &&
+        if [ -n \"\$pyfile\" ]; then
+          sed -i \"s/cont = input('Are you sure you want to continue y\/n\?')/cont = 'y'/\" \"\$pyfile\"
+        else
+          echo 'cont = \"y\"' > /tmp/patch.py &&
+          python3 -c \"import buildozer; f = buildozer.__file__.replace('__init__.pyc', '__init__.py'); open(f, 'w').write(open('/tmp/patch.py').read())\"
+        fi &&
+        buildozer android debug
+      "
   artifacts:
     paths:
-      - bin/*.apk
-
+      - bin/
