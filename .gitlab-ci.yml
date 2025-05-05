@@ -9,17 +9,18 @@ build-apk:
   stage: build
   script:
     - docker build -t $DOCKER_IMAGE .
-    - docker run --rm -v $CI_PROJECT_DIR:/app $DOCKER_IMAGE /bin/sh -c '
+    - |
+      docker run --rm -v $CI_PROJECT_DIR:/app $DOCKER_IMAGE /bin/sh -c "
         pip install --upgrade pip buildozer cython &&
-        pyfile=$(python3 -c "import buildozer, os; p = buildozer.__file__.replace(\"__init__.pyc\", \"__init__.py\"); print(p if os.path.exists(p) else \"\")") &&
-        if [ -n \"$pyfile\" ]; then
-          sed -i \"s/cont = input('Are you sure you want to continue [y\\/n]\\?')/cont = 'y'/\" \"$pyfile\"
+        pyfile=\$(python3 -c 'import buildozer, os; p = buildozer.__file__.replace(\"__init__.pyc\", \"__init__.py\"); print(p if os.path.exists(p) else \"\")') &&
+        if [ -n \"\$pyfile\" ]; then
+          sed -i \"s/cont = input('Are you sure you want to continue [y\\/n]\\?')/cont = 'y'/\" \"\$pyfile\"
         else
           echo \"cont = 'y'\" > /tmp/patch.py &&
-          python3 -c \"import buildozer; f = buildozer.__file__.replace('__init__.pyc', '__init__.py'); open(f, 'w').write(open('/tmp/patch.py').read())\"
+          python3 -c 'import buildozer; f = buildozer.__file__.replace(\"__init__.pyc\", \"__init__.py\"); open(f, \"w\").write(open(\"/tmp/patch.py\").read())'
         fi &&
         buildozer android debug
-      '
+      "
   artifacts:
     paths:
       - bin/*.apk
