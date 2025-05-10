@@ -1,5 +1,5 @@
 FROM python:3.9-slim
-# Install dependencies
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     build-essential \
     git \
@@ -26,15 +26,8 @@ RUN apt-get update && apt-get install -y \
 # Set locale
 ENV LANG C.UTF-8
 # Install Python dependencies
-RUN pip install --no-cache-dir buildozer cython
-# Patch Buildozer to auto-accept root prompt
-RUN python3 -c "\
-import buildozer; \
-f = buildozer.__file__; \
-with open(f, 'r') as file: \
-    content = file.read(); \
-content = content.replace(\"cont = input('Are you sure you want to continue [y/n]?')\", \"cont = 'y'\"); \
-with open(f, 'w') as file: \
-    file.write(content)"
+RUN pip install --no-cache-dir cython buildozer
+# Patch Buildozer to skip root confirmation
+RUN python3 -c "import buildozer; f = buildozer.__file__; with open(f, 'r') as file: content = file.read(); content = content.replace(\"cont = input('Are you sure you want to continue [y/n]?')\", \"cont = 'y'\"); with open(f, 'w') as file: file.write(content)"
 # Default workdir
 WORKDIR /app
