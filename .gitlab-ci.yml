@@ -1,18 +1,29 @@
-image: docker:latest
-services:
-  - docker:dind
-variables:
-  DOCKER_HOST: tcp://docker:2375/
-  DOCKER_DRIVER: overlay2
 stages:
   - build
-build-apk:
+  - deploy
+variables:
+  DOCKER_IMAGE: sridhar281994/buildozer-android:v10
+  BUILDOZER_ALLOW_ROOT: 1
+before_script:
+  - apk add --no-cache bash git
+build_apk:
   stage: build
+  image: docker:latest
+  services:
+    - docker:dind
   script:
-    - apk add --no-cache bash git
-    - docker build -t kivy-builder .
-    - docker run --rm -v $CI_PROJECT_DIR:/app kivy-builder /bin/sh -c "pip install --upgrade pip buildozer cython && BUILDOZER_ALLOW_ROOT=1 buildozer android debug"
+    - echo "Building Docker image..."
+    - docker build -t $DOCKER_IMAGE .
+    - echo "Pushing Docker image..."
+    - docker push $DOCKER_IMAGE
+deploy_apk:
+  stage: deploy
+  image: $DOCKER_IMAGE
+  script:
+    - echo "Building APK..."
+    - pip install --upgrade pip buildozer cython
+    - buildozer android debug
   artifacts:
     paths:
-      - bin/
-    expire_in: 1 week
+      - bin/*.apk
+    when: always
