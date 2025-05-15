@@ -1,31 +1,33 @@
-name: Build APK with Buildozer
+name: Build APK
 on:
   push:
-    branches: [main]
+    branches:
+      - main
 jobs:
   build-apk:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    - name: Set up Docker
-      uses: docker/setup-buildx-action@v2
-    - name: Login to Docker Hub
-      uses: docker/login-action@v2
-      with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
-    - name: Build Docker image
-      run: docker build -t sridhar281994/buildozer-android:v10 .
-    - name: Run Buildozer to generate APK
-      run: |
-        docker run --rm -v ${{ github.workspace }}:/app \
-        -e BUILDOZER_ALLOW_ROOT=1 \
-        sridhar281994/buildozer-android:v10 buildozer android debug
-    - name: Upload APK as artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: datecha-apk
-        path: bin/*.apk
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Log in to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Pull custom Buildozer image
+        run: docker pull sridhar281994/buildozer-android:v10
+      - name: Build APK with Buildozer
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}:/app \
+            -w /app \
+            -e BUILDOZER_ALLOW_ROOT=1 \
+            sridhar281994/buildozer-android:v10 \
+            /bin/sh -c "BUILDOZER_ALLOW_ROOT=1 buildozer android debug"
+      - name: Upload APK as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug-apk
+          path: bin/*.apk
