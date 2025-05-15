@@ -24,10 +24,12 @@ RUN apt-get update && apt-get install -y \
     python3-pip \
     && rm -rf /var/lib/apt/lists/*
 # Set locale
-ENV LANG C.UTF-8
+ENV LANG=C.UTF-8
 # Install Python dependencies
 RUN pip install --no-cache-dir cython buildozer
-# Patch Buildozer to skip root confirmation
-RUN python3 -c "import buildozer; f = buildozer.__file__; with open(f, 'r') as file: content = file.read(); content = content.replace(\"cont = input('Are you sure you want to continue [y/n]?')\", \"cont = 'y'\"); with open(f, 'w') as file: file.write(content)"
-# Default workdir
+# Patch Buildozer to auto-accept root confirmation
+RUN echo "import buildozer; f = buildozer.__file__.replace('__init__.pyc', '__init__.py'); \
+text = open(f).read(); text = text.replace(\"cont = input('Are you sure you want to continue [y/n]?')\", \"cont = 'y'\"); \
+open(f, 'w').write(text)" > /tmp/patch.py && python3 /tmp/patch.py
+# Set working directory
 WORKDIR /app
