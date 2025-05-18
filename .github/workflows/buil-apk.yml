@@ -31,7 +31,13 @@ jobs:
           docker build -t patched-buildozer .
       - name: Build APK
         run: |
-          docker run --rm -v ${{ github.workspace }}:/app -w /app -e BUILDOZER_ALLOW_ROOT=1 patched-buildozer buildozer android debug
+         docker run --rm \
+          -v ${{ github.workspace }}:/app \
+          -w /app \
+          -e BUILDOZER_ALLOW_ROOT=1 \
+          sridhar281994/buildozer-android:v13 \
+          /bin/sh -c "buildozer android debug"
+        
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
