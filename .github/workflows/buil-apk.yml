@@ -12,11 +12,12 @@ jobs:
       - name: Build APK with Buildozer Docker
         run: |
           docker run --rm \
-            -v ${{ github.workspace }}:/app \
-            -w /app \
-            -e BUILDOZER_ALLOW_ROOT=1 \
-            sridhar281994/buildozer-android:v11 \
-            buildozer --allow-root android debug
+          -v ${{ github.workspace }}:/app \
+          -w /app \
+          -e BUILDOZER_ALLOW_ROOT=1 \
+          sridhar281994/buildozer-android:v11 \
+          buildozer --allow-root android debug
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
