@@ -9,11 +9,7 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
-      - name: Install Docker (for GitHub-hosted runners)
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker.io
-      - name: Run Buildozer Docker image to generate APK
+      - name: Build APK with Buildozer Docker
         run: |
           docker run --rm \
             -v ${{ github.workspace }}:/app \
