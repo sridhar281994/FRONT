@@ -1,5 +1,9 @@
 FROM python:3.9-slim
-# Install system dependencies
+# Set environment
+ENV LANG C.UTF-8
+ENV PATH="/usr/local/bin:$PATH"
+ENV BUILDOZER_ALLOW_ROOT=1
+# Install dependencies
 RUN apt-get update && apt-get install -y \
     build-essential \
     git \
@@ -21,15 +25,13 @@ RUN apt-get update && apt-get install -y \
     libreadline-dev \
     libbz2-dev \
     libgdbm-compat-dev \
-    python3-pip \
     && rm -rf /var/lib/apt/lists/*
-# Set locale
-ENV LANG=C.UTF-8
-# Install Python dependencies
-RUN pip install --no-cache-dir cython buildozer
-# Patch Buildozer to auto-accept root confirmation
-RUN echo "import buildozer; f = buildozer.__file__.replace('__init__.pyc', '__init__.py'); \
-text = open(f).read(); text = text.replace(\"cont = input('Are you sure you want to continue [y/n]?')\", \"cont = 'y'\"); \
-open(f, 'w').write(text)" > /tmp/patch.py && python3 /tmp/patch.py
-# Set working directory
+# Install buildozer and patch root confirmation
+RUN pip install --no-cache-dir buildozer cython && \
+    python3 -c "import buildozer, os; \
+    f = buildozer.__file__.replace('__init__.pyc', '__init__.py'); \
+    print('Patching:', f); \
+    text = open(f).read(); \
+    patched = text.replace(\"cont = input('Are you sure you want to continue [y/n]?\')\", \"cont = 'y'\"); \
+    open(f, 'w').write(patched)"
 WORKDIR /app
